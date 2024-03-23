@@ -48,7 +48,7 @@ class DBMain:
         queries = [
             """CREATE TABLE IF NOT EXISTS flowers_img(pid INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT)
             """,
-            """CREATE VIRTUAL TABLE IF NOT EXISTS flowers_vector USING fts5(pid, tokens, score)
+            """CREATE VIRTUAL TABLE IF NOT EXISTS flowers_vector USING fts4(pid, tokens, score)
             """,
             """ CREATE TABLE IF NOT EXISTS config (
                 key  TEXT NOT NULL PRIMARY KEY,
