@@ -33,6 +33,7 @@ class Router:
 
 class RequestRouter(BaseHTTPRequestHandler):
     __web_dir    = os.path.join(os.getcwd(), config.WEB_DIST)
+    __data_dir   = os.path.join(os.getcwd(), config.DATASET_PATH)
     __req_router = Router()
 
     @classmethod
@@ -61,8 +62,10 @@ class RequestRouter(BaseHTTPRequestHandler):
     def do_DELETE(self):    self.route_request('DELETE')
 
     def do_GET(self):
-        if self.path.startswith('/api'):
+        if self.path.startswith('/api/'):
             self.route_request('GET')
+        elif self.path.startswith("/dataset/"):
+            self.handle_data_request()
         else:
             self.handle_ui_request()
 
@@ -71,22 +74,33 @@ class RequestRouter(BaseHTTPRequestHandler):
         handler = self.__req_router.route(method, in_path)
         if handler:
             handler().handle(self)
-        elif in_path.startswith("/api"):
+        elif in_path.startswith("/api/"):
             self.handle_ui_request(403)
         else:
             self.handle_ui_request()
+
+    def handle_data_request(self):
+        # Serve UI files
+        req_file  = urlparse(self.path).path.replace("/dataset/", "")
+        filename  = os.path.join(self.__data_dir, req_file)
+        if os.path.isfile(filename) == False:
+            self.send_response(404)
+            self.end_headers()
+            return
+        self.send_file(filename, 200)
 
     def handle_ui_request(self, resp_code = 200):
         # Serve UI files
         req_file  = urlparse(self.path).path.lstrip('/')
         filename  = os.path.join(self.__web_dir, req_file)
-
         if os.path.isfile(filename) == False:
             resp_code = 404
             filename = os.path.join(self.__web_dir, 'index.html')
+        self.send_file(filename, resp_code)
 
-        with open(filename, 'rb') as f:
-            mimetype = mimetypes.guess_type(filename)
+    def send_file(self, filepath, resp_code):
+        with open(filepath, 'rb') as f:
+            mimetype = mimetypes.guess_type(filepath)
             self.send_response(resp_code)
             if mimetype[0] is not None:
                 self.send_header('Content-type', mimetype[0])
@@ -94,7 +108,6 @@ class RequestRouter(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html')
             self.end_headers()
             self.wfile.write(f.read())
-
 
 sys.path.append(str(pathlib.Path(__file__).parent))
 import request_handler.register_request_handler as register

@@ -87,5 +87,9 @@ def is_json(in_text: str):
         return False
 
 def save_to_file(in_data, filename):
-    with open(filename, 'w') as f:
+    with open(filename, 'wb') as f:
         f.write(in_data)
+
+def make_dir_if_not_exists(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)

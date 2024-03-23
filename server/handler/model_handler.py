@@ -26,7 +26,7 @@ class ModelHandler:
             predicts = ModelHandler.__pipe(Image.open(img_path))
         tokens = []
         for predict in predicts:
-            if predict["score"] < 0.5:
+            if predict["score"] < 0.1:
                 continue
             tokens.append(process_img_label(predict["label"]))
         if len(tokens) == 0:

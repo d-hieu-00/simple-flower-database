@@ -42,7 +42,7 @@ class GetTokensFromImageHandler(BaseRequestHandler):
             return
 
         # Read data & Allow to read file with 20MB size
-        data = self._read_body(req, 20480)
+        data = self._read_body(req, 20 * 1024 * 1024)
         if data is None :
             self._set_resp(400, "Invalid or missing request data")
             return

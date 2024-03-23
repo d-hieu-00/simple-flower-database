@@ -15,4 +15,4 @@ class GetConfigHandler(BaseRequestHandler):
         if response is None:
             self._set_resp(500, "Failed to query config")
         else:
-            self._send_resp(200, response)
+            self._set_resp(200, response)

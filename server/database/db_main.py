@@ -58,10 +58,8 @@ class DBMain:
             """ INSERT OR IGNORE INTO config(key, data) VALUES ('base', '{}')
             """
         ]
-        ok = True
         for query in queries:
-            if ok != True: break
-            ok = safe_execute(None, self.__write, query)
+            safe_execute(None, self.__write, query)
 
     ### IMAGE HANDLER ####
     def save_img(self, filename, predicts):
@@ -80,14 +78,16 @@ class DBMain:
         if err_msg != "":
             logger.error(f"[{self.class_name}] Err: {err_msg}")
             return err_msg
-        return True
+        return cursor.lastrowid
 
     def delete_img(self, pid):
+        err_msg = ""
         try:
+            # Ignore no row deleted in table flowers_vector. Must delete this table first
+            self.__write("DELETE FROM flowers_vector WHERE pid = ?", pid)
+            # Delete and check it
             if self.__write("DELETE FROM flowers_img WHERE pid = ?", pid).rowcount < 1:
                 raise Exception("item not found")
-            # Ignore no row deleted in table flowers_vector
-            self.__write("DELETE FROM flowers_vector WHERE pid = ?", pid)
         except Exception as e:
             err_msg = f"Failed to delete. Error: {str(e)}"
         except:
@@ -97,29 +97,50 @@ class DBMain:
             return err_msg
         return True
 
-    def query_img(self, tokens: str, first: int, size: int):
-        base_query  = "SELECT pid FROM flowers_vector WHERE token MATCH ? GROUP BY pid"
+    def query_img_by_id(self, id: int):
+        query = "SELECT * FROM flowers_img WHERE pid = ?"
+        return self.__read(query, id).fetchall()
 
-        count_query = f"SELECT COUNT(1) FROM ({base_query})"
-        sel_query   = f"{base_query} ORDER BY score DESC, rank DESC LIMIT { size if size is not None else 10 }"
+    def query_img(self, tokens: str, first: int, size: int):
+        base_query  = "SELECT fv.pid %s FROM flowers_vector fv JOIN flowers_img fi ON fv.pid = fi.pid WHERE tokens MATCH ? GROUP BY fv.pid"
+
+        count_query = f"SELECT COUNT(1) FROM ({ base_query % "" })"
+        sel_query   = f"{ base_query % ", GROUP_CONCAT(tokens, ', '), fi.filename " } ORDER BY tokens LIKE ? DESC LIMIT { size if size is not None else 10 }"
+        # sel_query   = f"{base_query} ORDER BY score DESC, rank DESC LIMIT { size if size is not None else 10 }"
 
         if first is not None:
             sel_query += f" OFFSET {first}"
 
+        data    = None
+        count   = None
+        err_msg = ""
         try:
             q_tokens = process_sel_tokens(tokens)
             cursor   = self.__read(count_query, q_tokens)
             count    = cursor.fetchall()[0][0]
 
-            cursor   = self.__read(sel_query, q_tokens)
-            return count, json.dumps(cursor.fetchall())
+            cursor   = self.__read(sel_query, q_tokens, q_tokens)
+            data     = cursor.fetchall()
         except Exception as e:
             err_msg = f"Failed to select. Error: {str(e)}"
+        except:
+            err_msg = "Failed to select. Unknow Error"
 
         if err_msg != "":
-            err_msg = "Failed to select. Unknow Error"
-        logger.error(err_msg)
-        return err_msg
+            logger.error(err_msg)
+            return err_msg
+
+        out_data = []
+        for it in data:
+            out_it = {
+                "id":       it[0],
+                "label":    it[1],
+                "path":     it[2],
+            }
+            out_data.append(out_it)
+
+        return count, out_data
+
     ### END OF [IMAGE HANDLER] ####
 
     ### BASE CONFIG ####

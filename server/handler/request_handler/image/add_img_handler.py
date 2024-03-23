@@ -45,7 +45,7 @@ class AddImageHandler(BaseRequestHandler):
             return
 
         # Read data & Allow to read file with 20MB size
-        data = self._read_body(req, 20480)
+        data = self._read_body(req, 20 * 1024 * 1024)
         if data is None :
             self._set_resp(400, "Invalid or missing request data")
             return
@@ -63,13 +63,15 @@ class AddImageHandler(BaseRequestHandler):
 
         # Try save to dataset & DB
         _filename  = self.__tmpFile.name.split("\\")[-1]
-        _save_path = os.path.join(config.NEW_DATASET_PATH, _filename)
+        _save_path = os.path.join(os.getcwd(), config.NEW_DATASET_PATH, _filename)
         save_to_file(data, _save_path)
 
-        db_resp = DBHanlder.dbMain.save_img(_filename, ModelHandler.predict(self.__tmpFile.name))
-        if db_resp != True:
+        _prefix    = "/".join([i for i in config.NEW_DATASET_PATH.split("/") if i not in config.DATASET_PATH.split("/")])
+        _filename  = "/".join([_prefix, self.__tmpFile.name.split("\\")[-1]])
+        img_id = DBHanlder.dbMain.save_img(_filename, ModelHandler.predict(self.__tmpFile.name))
+        if type(img_id) != int or img_id < 1:
             self._set_resp(500, f"Failed to save the image. Something went wrong.")
             return
 
         # Response OK
-        self._set_resp(200, json.dumps({ "resp": "Save image successfully" }))
+        self._set_resp(200, json.dumps({ "resp": DBHanlder.dbMain.query_img_by_id(img_id)[0] }))

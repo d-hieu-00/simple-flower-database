@@ -4,7 +4,6 @@ from urllib.parse import parse_qs, urlparse
 
 # Internal
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.parent))
-from utils.utils import is_json
 from handler.db_handler import DBHanlder
 from handler.request_router import RequestRouter
 from handler.request_handler.base_request_handler import BaseRequestHandler
@@ -25,7 +24,7 @@ class GetImageHandler(BaseRequestHandler):
             if "first" in in_params:
                 out_first = int(in_params["first"][0])
             if "query" in in_params:
-                out_query = int(in_params["query"][0])
+                out_query = in_params["query"][0]
             else:
                 self._set_resp(400, f"Missing required params 'query'")
                 return None
@@ -34,7 +33,9 @@ class GetImageHandler(BaseRequestHandler):
             return None
         # Try verify params
         try:
-            if out_size < 1 or out_first < 1 or out_query == "":
+            if (out_size is not None and out_size < 1) \
+                    or (out_first is not None and out_first < 1) \
+                    or out_query == "":
                 self._set_resp(400, f"Invalid data to query")
                 return None
         except Exception as e:
@@ -50,8 +51,11 @@ class GetImageHandler(BaseRequestHandler):
             return
         # Query from DB
         db_resp = DBHanlder.dbMain.query_img(params[2], params[0], params[1])
-        if db_resp is None or is_json(db_resp) == False:
+        if db_resp is None:
             self._set_resp(500, db_resp if db_resp is None else f"Failed to query image. Unknow error.")
             return
         # Response OK
-        self._set_resp(200, db_resp)
+        self._set_resp(200, json.dumps({
+            "count": db_resp[0],
+            "resp": db_resp[1]
+        }))

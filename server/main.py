@@ -8,14 +8,14 @@ os.chdir(str(pathlib.Path(__file__).parent))
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 # Internal
+import config
 from utils.utils import logger
+
+logger.set_level(config.LOG_LEVEL)
+if config.LOG_FILE is not None: logger.set_file(config.LOG_FILE)
+
 from handler.request_router import RequestRouter
 from handler.redirect_request_router import RedirectRequestRouter
-
-import config
-
-# logger.set_level(logger.DEBUG)
-# logger.set_file("abc.log")
 
 """ Handle signal """
 running = True
@@ -53,4 +53,4 @@ if __name__ == "__main__":
 
     while running and running_thread.is_alive(): time.sleep(1)
 
-    running_thread.join(1)
+    running_thread.join(0.5)

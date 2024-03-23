@@ -26,7 +26,7 @@ class BaseRequestHandler(ABC):
     def _handle(self, req: RequestRouter):
         pass
 
-    def _read_body(self, req: RequestRouter, max_len: int = 10240):
+    def _read_body(self, req: RequestRouter, max_len: int = 10 * 1024 * 1024):
         # Expect request body has less than 10MB data
         # If it is larger. Define your own function to read and parse from stream
         if "content-length" not in req.headers:
@@ -43,7 +43,7 @@ class BaseRequestHandler(ABC):
         self._resp_msg  = msg
         # Print log for error resp
         if code != 200:
-            logger.warn(f"[{BaseRequestHandler.method()} -- {BaseRequestHandler.path()}] Handle failed: {self._resp_code} -- {self._resp_msg}")
+            logger.warn(f"{self.__req_line} -- Handle failed [{self._resp_code}]: {self._resp_msg}")
 
     def _send_resp(self, req: RequestRouter):
         req.send_response(self._resp_code)
@@ -61,12 +61,13 @@ class BaseRequestHandler(ABC):
             req.end_headers()
 
     def handle(self, req: RequestRouter):
+        self.__req_line = req.requestline
         try:
             self._handle(req)
         except Exception as e:
-            logger.error(f"[{BaseRequestHandler.method()} -- {BaseRequestHandler.path()}] Handle failed: {str(e)}")
+            logger.error(f"{self.__req_line} -- Handle failed: {str(e)}")
             self._set_resp(500, str(e))
         except:
-            logger.error(f"[{BaseRequestHandler.method()} -- {BaseRequestHandler.path()}] Handle failed: Unknow Error")
+            logger.error(f"{self.__req_line} -- Handle failed: Unknow Error")
             self._set_resp(500, "Unknow Error")
         self._send_resp(req)
