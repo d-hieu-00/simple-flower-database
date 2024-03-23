@@ -1,0 +1,6 @@
+model/saved*/**
+database/**
+dataset/**
+backup/**
+**/.vscode
+**/__pycache__/
