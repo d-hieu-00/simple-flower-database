@@ -2,6 +2,8 @@ import time
 import random
 import string
 import os
+import re
+import json
 
 """ Logger Functions """
 if os.name == 'nt': os.system('color')
@@ -70,3 +72,20 @@ def safe_execute(default, function, *args, **kwargs):
     except:
         logger.error("[%s] unknown error occur" % (function.__name__))
     return default
+
+def process_img_label(in_label: str):
+    return in_label.replace("flower", "").strip()
+
+def process_sel_tokens(in_tokens: str):
+    return re.sub("(and|or|near)", "OR", in_tokens, flags=re.IGNORECASE)
+
+def is_json(in_text: str):
+    try:
+        json.loads(in_text)
+        return True
+    except:
+        return False
+
+def save_to_file(in_data, filename):
+    with open(filename, 'w') as f:
+        f.write(in_data)
