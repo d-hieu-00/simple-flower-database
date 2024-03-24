@@ -5,6 +5,11 @@ import os
 import re
 import json
 
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+import nltk; nltk.download('stopwords'); nltk.download('punkt')
+
 """ Logger Functions """
 if os.name == 'nt': os.system('color')
 class mLogger:
@@ -76,8 +81,19 @@ def safe_execute(default, function, *args, **kwargs):
 def process_img_label(in_label: str):
     return in_label.replace("flower", "").strip()
 
+
+stop_words = set(stopwords.words('english')); stop_words.add("the"); stop_words.add("in")
+
 def process_sel_tokens(in_tokens: str):
-    return re.sub("(and|or|near)", "OR", in_tokens, flags=re.IGNORECASE)
+    word_tokens = word_tokenize(in_tokens)
+    filtered_tokens = [w for w in word_tokens if not w.lower() in stop_words]
+
+    out_tokens = " ".join(filtered_tokens)
+    out_tokens = re.sub("(and|or|near|\\s+)", " OR ", out_tokens, flags=re.IGNORECASE)
+    out_tokens = re.sub("(\\s*OR\\s*)+", " OR ", out_tokens, flags=re.IGNORECASE)
+
+    logger.info(f"Process tokens in: '{in_tokens}', out: '{out_tokens}'")
+    return out_tokens
 
 def is_json(in_text: str):
     try:

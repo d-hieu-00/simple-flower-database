@@ -19,14 +19,17 @@ class ModelHandler:
     __pipe = _load_pipeline()
     __lock = threading.Lock()
 
+    ThresHold = config.PREDICT_THRESHOLD
+
     @staticmethod
     def img_to_token(img_path):
         predicts = None
         with ModelHandler.__lock:
             predicts = ModelHandler.__pipe(Image.open(img_path))
+        logger.info(f"[{__name__}] Predict result", predicts)
         tokens = []
         for predict in predicts:
-            if predict["score"] < 0.1:
+            if predict["score"] < ModelHandler.ThresHold:
                 continue
             tokens.append(process_img_label(predict["label"]))
         if len(tokens) == 0:

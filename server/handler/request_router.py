@@ -51,7 +51,10 @@ class RequestRouter(BaseHTTPRequestHandler):
 
     def log_request(self, code='-', size='-'):
         if isinstance(code, HTTPStatus): code = code.value
-        logger.info(self.__class_name, self.address_string(), self.requestline, str(code), size)
+        if "dataset" in self.requestline and code == 200:
+            logger.debug(self.__class_name, self.address_string(), self.requestline, str(code), size)
+        else:
+            logger.info(self.__class_name, self.address_string(), self.requestline, str(code), size)
 
     def do_METHOD(self, method):
         if method not in ('GET', 'POST', 'PUT', 'DELETE'):

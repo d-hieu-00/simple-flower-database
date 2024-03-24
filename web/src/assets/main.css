@@ -1,8 +1,9 @@
 @import './base.css';
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  height: inherit;
+  margin: 2rem 2rem;
   padding: 2rem;
   font-weight: normal;
 }
@@ -28,8 +29,19 @@ a,
   }
 
   #app {
+    height: inherit;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 5fr;
     padding: 0 2rem;
   }
+}
+
+.inherit-height {
+  height: inherit !important;
+}
+
+.image-item {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }

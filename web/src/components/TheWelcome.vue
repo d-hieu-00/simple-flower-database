@@ -1,88 +1,209 @@
+<template @reloadImage="doSearchString">
+    <div class="inherit-height card shadow">
+        <div class="card-header">
+            <div class="input-group mb-2 mt-2">
+                <input type="text" class="form-control" placeholder="Name of flower" v-model="searchString"
+                    @keyup.enter="doSearchString">
+                <button class="btn btn-outline-secondary" type="button" @click="doSearchString">Search</button>
+                <input id="input-file" type="file" accept="image/*" style="display: none" @change="handleFileChange">
+                <button class="btn btn-outline-secondary" type="button" @click="openFileInput">Search by image</button>
+            </div>
+        </div>
+        <div class="card-body" id="m-card">
+            <div class="scrollable-card">
+                <div class="image-grid" :style="{ maxHeight: cardBodyHeight + 'px' }">
+                    <div class="card m-0 image-card" v-for="item in loadImages.images" @mouseover="hoverIndex = item.id"
+                        @mouseleave="hoverIndex = null">
+                        <img class="rounded image-item card-img-top" :src="item.realPath">
+                        <button class="delete-button btn btn-warning" @click="deleteImage(item.id)" v-show="hoverIndex === item.id">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex">
+            <div class="me-auto p-2"></div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary dropdown-toggle" :class="displaySizes.class" data-bs-toggle="dropdown">
+                    {{ displaySizes.label }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li v-for="opt in displaySizes.options">
+                        <a class="dropdown-item" @click="updateDisplaySize(opt)">{{ opt }}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+.scrollable-card {
+    overflow-y: auto;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 10px;
+}
+
+.card {
+  height: 100%; /* Set a fixed height for all cards */
+}
+
+.image-card:hover .delete-button {
+  display: block; /* Show delete button when hovering over the card */
+}
+
+.delete-button {
+  display: none; /* Hide delete button by default */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+</style>
+
 <script setup lang="ts">
-import WelcomeItem from './WelcomeItem.vue'
-import DocumentationIcon from './icons/IconDocumentation.vue'
-import ToolingIcon from './icons/IconTooling.vue'
-import EcosystemIcon from './icons/IconEcosystem.vue'
-import CommunityIcon from './icons/IconCommunity.vue'
-import SupportIcon from './icons/IconSupport.vue'
+import { ref, onMounted } from 'vue';
+
+const cardBodyHeight = ref(0);
+const hoverIndex = ref(null);
+
+onMounted(() => {
+    const cardBody = document.querySelector('#m-card');
+    if (cardBody) {
+        cardBodyHeight.value = cardBody.clientHeight - 50;
+    }
+});
 </script>
 
-<template>
-  <WelcomeItem>
-    <template #icon>
-      <DocumentationIcon />
-    </template>
-    <template #heading>Documentation</template>
+<script lang="ts">
+import { toast } from 'vue3-toastify';
 
-    Vue’s
-    <a href="https://vuejs.org/" target="_blank" rel="noopener">official documentation</a>
-    provides you with all information you need to get started.
-  </WelcomeItem>
+var backupData = {
+    oldSearchString: "",
+};
 
-  <WelcomeItem>
-    <template #icon>
-      <ToolingIcon />
-    </template>
-    <template #heading>Tooling</template>
+export default {
+    components: {},
+    data() {
+        return {
+            searchString: "",
+            loadImages: ref({
+                count: 0,
+                images: []
+            } as any),
+            loadingImages: ref(false),
+            loadingTokens: ref(false),
+            loadedTokens: ref(""),
+            displaySizes: {
+                class: "",
+                label: "Display size [30]",
+                choose: 30,
+                options: [ 10, 15, 20, 30, 50, 70, 100, 200, 300]
+            },
+        }
+    },
+    methods: {
+        doSearchString() {
+            if (this.searchString  === undefined || this.searchString === null || this.searchString === "") {
+                toast.warn("Empty string. Please input the name of flower");
+                return;
+            }
 
-    This project is served and bundled with
-    <a href="https://vitejs.dev/guide/features.html" target="_blank" rel="noopener">Vite</a>. The
-    recommended IDE setup is
-    <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">VSCode</a> +
-    <a href="https://github.com/johnsoncodehk/volar" target="_blank" rel="noopener">Volar</a>. If
-    you need to test your components and web pages, check out
-    <a href="https://www.cypress.io/" target="_blank" rel="noopener">Cypress</a> and
-    <a href="https://on.cypress.io/component" target="_blank" rel="noopener"
-      >Cypress Component Testing</a
-    >.
+            if (this.loadingImages == true && backupData.oldSearchString == this.searchString) {
+                toast.info("Loading images. Please wait!")
+            }
 
-    <br />
+            if (this.loadingTokens === false) {
+                this.$emit('fileChanged', null);
+            }
 
-    More instructions are available in <code>README.md</code>.
-  </WelcomeItem>
+            let url = `${location.toString()}api/image?query=${this.searchString}&size=${this.displaySizes.choose}`;
+            this.$emit("searchResult", { searching: true, count: 0, time: 0 })
+            this.loadingImages = true;
+            backupData.oldSearchString = this.searchString;
+            fetch(url, { method: "GET" }).then((response) => {
+                response.json().then((data) => {
+                    this.loadImages["count"] = data["count"];
+                    this.loadImages["images"] = data["resp"];
 
-  <WelcomeItem>
-    <template #icon>
-      <EcosystemIcon />
-    </template>
-    <template #heading>Ecosystem</template>
-
-    Get official tools and libraries for your project:
-    <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener">Pinia</a>,
-    <a href="https://router.vuejs.org/" target="_blank" rel="noopener">Vue Router</a>,
-    <a href="https://test-utils.vuejs.org/" target="_blank" rel="noopener">Vue Test Utils</a>, and
-    <a href="https://github.com/vuejs/devtools" target="_blank" rel="noopener">Vue Dev Tools</a>. If
-    you need more resources, we suggest paying
-    <a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">Awesome Vue</a>
-    a visit.
-  </WelcomeItem>
-
-  <WelcomeItem>
-    <template #icon>
-      <CommunityIcon />
-    </template>
-    <template #heading>Community</template>
-
-    Got stuck? Ask your question on
-    <a href="https://chat.vuejs.org" target="_blank" rel="noopener">Vue Land</a>, our official
-    Discord server, or
-    <a href="https://stackoverflow.com/questions/tagged/vue.js" target="_blank" rel="noopener"
-      >StackOverflow</a
-    >. You should also subscribe to
-    <a href="https://news.vuejs.org" target="_blank" rel="noopener">our mailing list</a> and follow
-    the official
-    <a href="https://twitter.com/vuejs" target="_blank" rel="noopener">@vuejs</a>
-    twitter account for latest news in the Vue world.
-  </WelcomeItem>
-
-  <WelcomeItem>
-    <template #icon>
-      <SupportIcon />
-    </template>
-    <template #heading>Support Vue</template>
-
-    As an independent project, Vue relies on community backing for its sustainability. You can help
-    us by
-    <a href="https://vuejs.org/sponsor/" target="_blank" rel="noopener">becoming a sponsor</a>.
-  </WelcomeItem>
-</template>
+                    this.loadImages.images.forEach((element: any) => {
+                        element["realPath"] = `${location.toString()}/dataset/${element["path"]}`
+                    });
+                    this.$emit("searchResult", { searching: false, count: data["count"], time: data["time"] })
+                });
+            }).catch(err => {
+                toast.error(err);
+            }).finally(() => {
+                this.loadingImages = false;
+                this.$emit("searchResult", { searching: false })
+            });
+        },
+        openFileInput() {
+            const fileInput = document.querySelector('#input-file') as HTMLElement;
+            if (fileInput !== null) {
+                fileInput.click();
+            }
+        },
+        handleFileChange(event: any) {
+            if (this.loadingTokens) {
+                toast.info("Uploading image. Please wait!");
+                return;
+            }
+            const file = event.target.files[0];
+            if (file) {
+                this.uploadImage(file);
+                this.$emit('fileChanged', file);
+            } else {
+                toast.warn("No file selected. Please try again");
+            }
+        },
+        uploadImage(file: any) {
+            this.loadingTokens = true;
+            let url = `${location.toString()}api/image/token`;
+            fetch(url, { method: "POST", body: file }).then((response) => {
+                return response.json();
+            }).then((data) => {
+                if (data["error"]) {
+                    toast.error(data["error"], { autoClose: 2000 });
+                    this.$emit("searchResult", { searching: false, count: 0, time: 0 })
+                    return;
+                }
+                this.loadedTokens = data["resp"];
+                this.searchString = this.loadedTokens;
+                this.doSearchString();
+            }).catch(err => {
+                toast.error(err);
+            }).finally(() => {
+                this.loadingTokens = false;
+            });
+        },
+        deleteImage(imgId: number) {
+            toast.info(`Deleting image`)
+            let url = `${location.toString()}api/image/${imgId}`;
+            fetch(url, { method: "DELETE" }).then((response) => {
+                return response.json();
+            }).then((data) => {
+                if (data["error"]) {
+                    toast.error(data["error"], { autoClose: 2000 });
+                    return;
+                }
+                toast.success(`Deleted image`)
+                this.doSearchString();
+            }).catch(err => {
+                toast.error(err);
+            });
+        },
+        updateDisplaySize(size: any) {
+            this.displaySizes.choose = size;
+            this.displaySizes.label = `Display size [${size}]`;
+            this.doSearchString();
+        },
+    },
+    created() {
+    }
+}
+</script>

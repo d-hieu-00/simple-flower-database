@@ -12,7 +12,7 @@ from utils.utils import process_sel_tokens
 from database.db_connector import DBConnector
 
 class DBMain:
-    __predict_threshold = 0.1
+    __predict_threshold = config.PREDICT_THRESHOLD
 
     @property
     def class_name(self): return self.__class__.__name__
@@ -105,7 +105,7 @@ class DBMain:
         base_query  = "SELECT fv.pid %s FROM flowers_vector fv JOIN flowers_img fi ON fv.pid = fi.pid WHERE tokens MATCH ? GROUP BY fv.pid"
 
         count_query = f"SELECT COUNT(1) FROM ({ base_query % "" })"
-        sel_query   = f"{ base_query % ", GROUP_CONCAT(tokens, ', '), fi.filename " } ORDER BY tokens LIKE ? DESC LIMIT { size if size is not None else 10 }"
+        sel_query   = f"{ base_query % ", GROUP_CONCAT(tokens, ', '), fi.filename " } ORDER BY GROUP_CONCAT(tokens, ', ') LIKE ? DESC, score DESC LIMIT { size if size is not None else 10 }"
         # sel_query   = f"{base_query} ORDER BY score DESC, rank DESC LIMIT { size if size is not None else 10 }"
 
         if first is not None:

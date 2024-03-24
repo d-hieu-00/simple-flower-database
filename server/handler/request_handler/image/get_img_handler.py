@@ -1,5 +1,6 @@
 import sys, pathlib
 import json
+import time
 from urllib.parse import parse_qs, urlparse
 
 # Internal
@@ -50,12 +51,15 @@ class GetImageHandler(BaseRequestHandler):
         if params is None:
             return
         # Query from DB
+        start_ts = int(time.time() * 1000)
         db_resp = DBHanlder.dbMain.query_img(params[2], params[0], params[1])
         if db_resp is None:
             self._set_resp(500, db_resp if db_resp is None else f"Failed to query image. Unknow error.")
             return
+        end_ts = int(time.time() * 1000)
         # Response OK
         self._set_resp(200, json.dumps({
             "count": db_resp[0],
-            "resp": db_resp[1]
+            "resp": db_resp[1],
+            "time": end_ts - start_ts
         }))
