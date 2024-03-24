@@ -7,7 +7,7 @@ WEB_DIST         = "../web/dist"
 DATASET_PATH     = "../dataset"
 NEW_DATASET_PATH = "../dataset/new" # For new image only
 
-PREDICT_THRESHOLD = 0.07
+PREDICT_THRESHOLD = 0.05
 
 from utils.utils import logger
 from utils.utils import make_dir_if_not_exists

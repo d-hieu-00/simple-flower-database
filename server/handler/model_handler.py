@@ -27,14 +27,16 @@ class ModelHandler:
         with ModelHandler.__lock:
             predicts = ModelHandler.__pipe(Image.open(img_path))
         logger.info(f"[{__name__}] Predict result", predicts)
-        tokens = []
+        tokens = ""
+        max_predict = config.PREDICT_THRESHOLD
         for predict in predicts:
-            if predict["score"] < ModelHandler.ThresHold:
-                continue
-            tokens.append(process_img_label(predict["label"]))
+            if max_predict < predict["score"]:
+                max_predict = predict["score"]
+                tokens = process_img_label(predict["label"])
+
         if len(tokens) == 0:
             return None
-        return " ".join(tokens).replace(" ", " OR ")
+        return tokens
 
     @staticmethod
     def predict(img_path):
