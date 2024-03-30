@@ -7,7 +7,7 @@ Here: https://www.robots.ox.ac.uk/%7Evgg/data/flowers/102/
 - psycopg2
 
 # Setup
-- Re-Run `model/setup-1.ipynb` to get:
+- Re-Run `model/setup_v1.ipynb` to get:
     - dataset
     - pre-trained model
     - create database form dataset

@@ -17,8 +17,7 @@
         <p>Dataset: <a class="link-primary" href="https://www.tensorflow.org/datasets/catalog/oxford_flowers102">
           https://www.tensorflow.org/datasets/catalog/oxford_flowers102</a>
         </p>
-        <p>Pre-Trained Model: <a class="link-primary" href="https://huggingface.co/dima806/oxford_flowers_image_detection">
-          https://huggingface.co/dima806/oxford_flowers_image_detection</a>
+        <p>Pre-Trained Model: <a class="link-primary" href="https://github.com/openai/CLIP">CLIP Model</a>
         </p>
       </div>
     </div>
