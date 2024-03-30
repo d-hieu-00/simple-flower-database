@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 </script>
 
 <template>
@@ -22,7 +23,10 @@ import { RouterLink, RouterView } from 'vue-router'
         </div>
         <div class="card shadow" style="margin-top: 20px;">
             <div class="card-body">
-                <p v-show="searching === true">Searching flower</p>
+                <p v-show="searching === true">
+                    Searching flower
+                    <font-awesome-icon class="fa-spin" icon="fa-solid fa-spinner" />
+                </p>
                 <div v-show="searching === false">
                     <!-- <p>Total images found: <b>{{ displayText.count }}</b></p> -->
                     <p>Time DB query: <b>{{ displayText.db_time }}</b> in millisecond</p>
