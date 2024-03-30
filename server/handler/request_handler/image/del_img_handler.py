@@ -30,8 +30,8 @@ class DeleteImageHandler(BaseRequestHandler):
 
             # Delete in database
             db_resp = DBHanlder.dbMain.delete_img(img_id)
-            if db_resp is None:
-                self._set_resp(500, f"Failed to delete image. Id'{img_id}'")
+            if db_resp != True:
+                self._set_resp(500, f"Failed to delete image. Id'{img_id}' {db_resp if db_resp is not None else ""}")
                 return
 
             # Response OK

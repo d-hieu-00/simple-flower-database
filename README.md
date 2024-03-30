@@ -2,16 +2,17 @@
 Here: https://www.robots.ox.ac.uk/%7Evgg/data/flowers/102/
 
 # Python dependencies
-- transformers
-- nltk
+- torch
+- clip
+- psycopg2
 
 # Setup
-- Re-Run `model/setup.ipynb` to get:
+- Re-Run `model/setup-1.ipynb` to get:
     - dataset
     - pre-trained model
     - create database form dataset
-    - save pre-trained model to local
-**Note**: Can model what model/ dataset you want from internet. You need modify `server/handler/model_handler.py`
+    - [use trained model CLIP](https://github.com/openai/CLIP)
+**Note**: Can model what model/ dataset you want from internet. You need modify `server/handler/model_handler_v1.py`
 to load and run the model you want.
 
 # Build Frontend

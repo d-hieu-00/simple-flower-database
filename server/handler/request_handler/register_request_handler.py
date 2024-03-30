@@ -8,8 +8,8 @@ from setting.set_config_handler import SetConfigHandler
 
 from image.add_img_handler import AddImageHandler
 from image.del_img_handler import DeleteImageHandler
-from image.get_img_handler import GetImageHandler
-from image.get_token_from_img_handler import GetTokensFromImageHandler
+from image.get_img_by_text_handler import GetImgByTextHandler
+from image.get_img_by_img_handler import GetImgByImgHandler
 
 def register_handler():
     RequestRouter.register_handler(GetConfigHandler.method(), GetConfigHandler.path(), GetConfigHandler)
@@ -17,5 +17,5 @@ def register_handler():
 
     RequestRouter.register_handler(AddImageHandler.method(), AddImageHandler.path(), AddImageHandler)
     RequestRouter.register_handler(DeleteImageHandler.method(), DeleteImageHandler.path(), DeleteImageHandler)
-    RequestRouter.register_handler(GetImageHandler.method(), GetImageHandler.path(), GetImageHandler)
-    RequestRouter.register_handler(GetTokensFromImageHandler.method(), GetTokensFromImageHandler.path(), GetTokensFromImageHandler)
+    RequestRouter.register_handler(GetImgByTextHandler.method(), GetImgByTextHandler.path(), GetImgByTextHandler)
+    RequestRouter.register_handler(GetImgByImgHandler.method(), GetImgByImgHandler.path(), GetImgByImgHandler)

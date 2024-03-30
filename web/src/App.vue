@@ -24,8 +24,9 @@ import { RouterLink, RouterView } from 'vue-router'
             <div class="card-body">
                 <p v-show="searching === true">Searching flower</p>
                 <div v-show="searching === false">
-                    <p>Total images found: <b>{{ displayText.count }}</b></p>
-                    <p>Time query: <b>{{ displayText.time }}</b> in millisecond</p>
+                    <!-- <p>Total images found: <b>{{ displayText.count }}</b></p> -->
+                    <p>Time DB query: <b>{{ displayText.db_time }}</b> in millisecond</p>
+                    <p>Time extract features: <b>{{ displayText.ext_time }}</b> in millisecond</p>
                 </div>
             </div>
         </div>
@@ -80,7 +81,8 @@ export default {
             handling: ref(false),
             displayText: ref({
                 count: 0,
-                time: 0
+                db_time: 0,
+                ext_time: 0,
             } as any),
         }
     },
@@ -100,8 +102,11 @@ export default {
             if (typeof info.count === typeof 1) {
                 this.displayText.count = info.count;
             }
-            if (typeof info.time === typeof 1) {
-                this.displayText.time = info.time;
+            if (typeof info.db_time === typeof 1) {
+                this.displayText.db_time = info.db_time;
+            }
+            if (typeof info.ext_time === typeof 1) {
+                this.displayText.ext_time = info.ext_time;
             }
             console.log(info);
         },

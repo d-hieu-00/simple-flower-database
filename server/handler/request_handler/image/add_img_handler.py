@@ -7,7 +7,7 @@ import os, tempfile
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.parent))
 from utils.utils import save_to_file
 from handler.db_handler import DBHanlder
-from handler.model_handler import ModelHandler
+from handler.model_handler_v1 import ModelHandlerV1
 from handler.request_router import RequestRouter
 from handler.request_handler.base_request_handler import BaseRequestHandler
 
@@ -54,10 +54,10 @@ class AddImageHandler(BaseRequestHandler):
         self.initTmpFile(file_extension)
         save_to_file(data, self.__tmpFile.name)
 
-        # Try get token
-        token = ModelHandler.img_to_token(self.__tmpFile.name)
+        # Try extract features
+        features = ModelHandlerV1.img_to_features(self.__tmpFile.name)
 
-        if token is None:
+        if features is None:
             self._set_resp(400, f"Failed to process the image. It doesn't seem like a flower.")
             return
 
@@ -68,7 +68,7 @@ class AddImageHandler(BaseRequestHandler):
 
         _prefix    = "/".join([i for i in config.NEW_DATASET_PATH.split("/") if i not in config.DATASET_PATH.split("/")])
         _filename  = "/".join([_prefix, self.__tmpFile.name.split("\\")[-1]])
-        img_id = DBHanlder.dbMain.save_img(_filename, ModelHandler.predict(self.__tmpFile.name))
+        img_id = DBHanlder.dbMain.save_img(_filename, features)
         if type(img_id) != int or img_id < 1:
             self._set_resp(500, f"Failed to save the image. Something went wrong.")
             return

@@ -1,7 +1,7 @@
 import sys, pathlib
 import json
 import sqlite3
-# import psycopg2
+import psycopg2
 # import mysql.connector
 
 # Internal
@@ -36,8 +36,8 @@ class DBConnector:
     def __new_connection(self):
         if self.__db_type == self.SQLite3:
             return sqlite3.connect(self.__db_config["path"], check_same_thread=False)
-        # if self.__db_type == self.PostgreSQL:
-        #     return psycopg2.connect(**self.__db_config)
+        if self.__db_type == self.PostgreSQL:
+            return psycopg2.connect(**self.__db_config)
         # if self.__db_type == self.MariaDB:
         #     return mysql.connector.connect(**self.__db_config)
         raise Exception(f"[{self.class_name}] Not support db '{self.db_type}'")
@@ -49,7 +49,6 @@ class DBConnector:
         if self.__db_type == self.PostgreSQL or self.__db_type == self.MariaDB:
             ok = ok \
              and self.__db_config.keys().__contains__("host") \
-             and self.__db_config.keys().__contains__("database") \
              and self.__db_config.keys().__contains__("user") \
              and self.__db_config.keys().__contains__("password")
         if ok == False:

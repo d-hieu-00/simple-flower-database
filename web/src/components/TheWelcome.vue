@@ -15,6 +15,9 @@
                     <div class="card m-0 image-card" v-for="item in loadImages.images" @mouseover="hoverIndex = item.id"
                         @mouseleave="hoverIndex = null">
                         <img class="rounded image-item card-img-top" :src="item.realPath">
+                        <span class="border rounded-pill fw-normal similarly-txt badge bg-dark fs-6" v-show="hoverIndex === item.id">
+                            {{ displayPercent(item.simi) }}
+                        </span>
                         <button class="delete-button btn btn-warning" @click="deleteImage(item.id)" v-show="hoverIndex === item.id">
                             Delete
                         </button>
@@ -58,10 +61,15 @@
 }
 
 .delete-button {
-  display: none; /* Hide delete button by default */
   position: absolute;
   top: 10px;
   right: 10px;
+}
+
+.similarly-txt {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
 }
 </style>
 
@@ -84,6 +92,8 @@ import { toast } from 'vue3-toastify';
 
 var backupData = {
     oldSearchString: "",
+    lastSearch: "text",
+    loadedFile: null,
 };
 
 export default {
@@ -107,6 +117,14 @@ export default {
         }
     },
     methods: {
+        handleData(data: any) {
+            this.loadImages["count"] = data["count"];
+            this.loadImages["images"] = data["resp"];
+            this.loadImages.images.forEach((element: any) => {
+                element["realPath"] = `${location.toString()}/dataset/${element["path"]}`
+            });
+            this.$emit("searchResult", { searching: false, count: data["count"], db_time: data["db_time"], ext_time: data["ext_time"] })
+        },
         doSearchString() {
             if (this.searchString  === undefined || this.searchString === null || this.searchString === "") {
                 toast.warn("Empty string. Please input the name of flower");
@@ -122,18 +140,17 @@ export default {
             }
 
             let url = `${location.toString()}api/image?query=${this.searchString}&size=${this.displaySizes.choose}`;
-            this.$emit("searchResult", { searching: true, count: 0, time: 0 })
+            this.$emit("searchResult", { searching: true, count: 0, db_time: 0, ext_time: 0 })
             this.loadingImages = true;
             backupData.oldSearchString = this.searchString;
+            backupData.lastSearch = "text";
             fetch(url, { method: "GET" }).then((response) => {
                 response.json().then((data) => {
-                    this.loadImages["count"] = data["count"];
-                    this.loadImages["images"] = data["resp"];
-
-                    this.loadImages.images.forEach((element: any) => {
-                        element["realPath"] = `${location.toString()}/dataset/${element["path"]}`
-                    });
-                    this.$emit("searchResult", { searching: false, count: data["count"], time: data["time"] })
+                    if (data["error"]) {
+                        toast.error(data["error"]);
+                        return;
+                    }
+                    this.handleData(data);
                 });
             }).catch(err => {
                 toast.error(err);
@@ -155,26 +172,34 @@ export default {
             }
             const file = event.target.files[0];
             if (file) {
+                backupData.loadedFile = file;
                 this.uploadImage(file);
-                this.$emit('fileChanged', file);
             } else {
                 toast.warn("No file selected. Please try again");
             }
         },
         uploadImage(file: any) {
+            if (!file) {
+                file = backupData.loadedFile;
+            }
+            if (!file) {
+                toast.error("Invalid file");
+                return;
+            }
+            this.$emit('fileChanged', file);
             this.loadingTokens = true;
-            let url = `${location.toString()}api/image/token`;
+            let url = `${location.toString()}api/image/query`;
+            backupData.lastSearch = "image";
+            this.$emit("searchResult", { searching: true, count: 0, db_time: 0, ext_time: 0 })
             fetch(url, { method: "POST", body: file }).then((response) => {
                 return response.json();
             }).then((data) => {
                 if (data["error"]) {
                     toast.error(data["error"], { autoClose: 2000 });
-                    this.$emit("searchResult", { searching: false, count: 0, time: 0 })
+                    this.$emit("searchResult", { searching: false, count: data["count"], db_time: 0, ext_time: 0 })
                     return;
                 }
-                this.loadedTokens = data["resp"];
-                this.searchString = this.loadedTokens;
-                this.doSearchString();
+                this.handleData(data);
             }).catch(err => {
                 toast.error(err);
             }).finally(() => {
@@ -200,8 +225,15 @@ export default {
         updateDisplaySize(size: any) {
             this.displaySizes.choose = size;
             this.displaySizes.label = `Display size [${size}]`;
-            this.doSearchString();
+            if (backupData.lastSearch == "image") {
+                this.uploadImage(null);
+            } else {
+                this.doSearchString();
+            }
         },
+        displayPercent(in_num: number) {
+            return `${(in_num*100).toFixed(2)}%`;
+        }
     },
     created() {
     }
